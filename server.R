@@ -1,4 +1,5 @@
 library(shiny)
+library(dplyr)
 
 tododf = read.csv("db/todolist.csv", stringsAsFactors = FALSE)
 
@@ -12,7 +13,14 @@ function(input, output){
       rowidx = grepl(input$filtCrit, todo_filt$desckeywd)
       todo_filt = todo_filt[rowidx,]
     }
-
+    
+    tododf_l1 = tododf %>% filter(l2_key == 0, l3_key == 0)
+    todofilt_l1 = todo_filt %>% group_by(l1_key) %>% summarize(l2_key_min = min(l2_key)) %>% filter(l2_key_min > 0)
+    tododf_l1 = inner_join(tododf_l1, todofilt_l1, by = "l1_key")
+    
+    if(nrow(tododf_l1) > 0){
+      todo_filt = bind_rows(tododf_l1, todo_filt)
+    }
 
     return(list(todo_filt = todo_filt))
   })
@@ -21,14 +29,22 @@ function(input, output){
     output$todolist = renderUI({
       
       todo_filt = todo_filt()$todo_filt
-      
       numtodo = nrow(todo_filt)
+      
+      todo_filt = todo_filt %>% arrange(l1_key, l2_key, l3_key)
+     
       todolist = tagList()
       for(i in 1:numtodo){
-        todolist[[i]] = p(todo_filt$desc[i], br(),actionLink(paste0("todolist",todo_filt$l1_key[i]),"Edit"))
+        l1_key = todo_filt$l1_key[i]
+        l2_key = todo_filt$l2_key[i]
+        desc = todo_filt$desc[i]
+        if(l2_key == 0){
+          todolist[[i]] = p(desc, br(),actionLink(paste0("todolist_",l1_key,"_",l2_key),"Edit"))
+        } else {
+          todolist[[i]] = p(style = "margin-left: 40px",desc, br(),actionLink(paste0("todolist_",l1_key,"_",l2_key),"Edit"))
+        }
       }
       
-      #print(todolist)
       return(todolist)
   })
 
@@ -48,16 +64,17 @@ function(input, output){
   observeEvent(todo_filt(),{
     
     todo_filt = todo_filt()$todo_filt
-    print(todo_filt)
-
+    #print(todo_filt)
     numtodo = nrow(todo_filt)
-    pkey = todo_filt$l1_key
+    todo_filt = todo_filt %>% arrange(l1_key, l2_key, l3_key)
+    
+    pkey = paste0(todo_filt$l1_key,"_",todo_filt$l2_key)
       
     for(i in 1:numtodo){
         local({
           my_i = i
 
-          observeEvent(input[[paste0("todolist",pkey[my_i])]],{
+          observeEvent(input[[paste0("todolist_",pkey[my_i])]],{
              output$addedit_task = renderUI({
                tagList(
                  textInput("taskdesc","Enter Task",value = todo_filt$desc[my_i]),
