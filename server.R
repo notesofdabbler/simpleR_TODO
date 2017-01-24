@@ -1,13 +1,16 @@
 library(shiny)
 library(dplyr)
+library(stringr)
 
 tododf = read.csv("db/todolist.csv", stringsAsFactors = FALSE)
 
 
 function(input, output){
   
+  rvs = reactiveValues(tododf = tododf, currKey = NULL)
+  
   todo_filt = reactive({
-    todo_filt = tododf
+    todo_filt = rvs$tododf
     todo_filt$desckeywd = paste0(todo_filt$desc,";;",todo_filt$keywd)
     if(input$filtCrit != ""){
       rowidx = grepl(input$filtCrit, todo_filt$desckeywd)
@@ -38,10 +41,22 @@ function(input, output){
         l1_key = todo_filt$l1_key[i]
         l2_key = todo_filt$l2_key[i]
         desc = todo_filt$desc[i]
-        if(l2_key == 0){
-          todolist[[i]] = p(desc, br(),actionLink(paste0("todolist_",l1_key,"_",l2_key),"Edit"))
+        keywd = todo_filt$keywd[i]
+        
+        if(grepl("pr:1",keywd)){
+          stylestr = "color:red"
+        } else if (grepl("pr:2",keywd)){
+          stylestr = "color:green"
+        } else if (grepl("pr:3",keywd)){
+          stylestr = "color:blue"
         } else {
-          todolist[[i]] = p(style = "margin-left: 40px",desc, br(),actionLink(paste0("todolist_",l1_key,"_",l2_key),"Edit"))
+          stylestr = ""
+        }
+        
+        if(l2_key == 0){
+          todolist[[i]] = p(style = stylestr, desc," ;", keywd, br(),actionLink(paste0("todolist_",l1_key,"_",l2_key),"Edit"))
+        } else {
+          todolist[[i]] = p(style = paste0("margin-left: 40px; ",stylestr),desc, " ;", keywd, br(),actionLink(paste0("todolist_",l1_key,"_",l2_key),"Edit"))
         }
       }
       
@@ -51,6 +66,7 @@ function(input, output){
 #  })
   
   observeEvent(input$addnewtask,{
+    rvs$currKey = NULL
     output$addedit_task = renderUI({
       tagList(
         textInput("taskdesc","Enter Task"),
@@ -75,6 +91,7 @@ function(input, output){
           my_i = i
 
           observeEvent(input[[paste0("todolist_",pkey[my_i])]],{
+             rvs$currKey = pkey[my_i]
              output$addedit_task = renderUI({
                tagList(
                  textInput("taskdesc","Enter Task",value = todo_filt$desc[my_i]),
@@ -90,12 +107,30 @@ function(input, output){
   
     
    observeEvent(input$updatetask,{
-      l1_key = max(tododf$l1_key) + 1
+     
       desc = input$taskdesc
       keywd = input$taskkeywd
-      todonew = data.frame(l1_key, desc = desc, keywd = keywd)
-      tododf = rbind(tododf, todonew)
-      write.csv(tododf,"db/todolist.csv",row.names = FALSE)
+      
+      tododf = rvs$tododf
+      
+      if(is.null(rvs$currKey)){
+        l1_key = max(tododf$l1_key) + 1
+        l2_key = 0
+        l3_key = 0
+        todonew = data.frame(l1_key, l2_key, l3_key, desc = desc, keywd = keywd)
+        tododf = rbind(tododf, todonew)
+        
+      } else {
+        currKey = rvs$currKey
+        pKey = paste0(tododf$l1_key,"_",tododf$l2_key)
+        idx = which(pKey == currKey)
+        tododf$desc[idx] = desc
+        tododf$keywd[idx] = keywd
+      }
+
+      rvs$tododf = tododf
+
+      write.csv(rvs$tododf,"db/todolist.csv",row.names = FALSE)
     })
     
     

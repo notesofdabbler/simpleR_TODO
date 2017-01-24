@@ -1,10 +1,10 @@
 "l1_key","desc","keywd","l2_key","l3_key"
 1,"get groceries","pr:1;ACTIVE",0,0
-2,"fix car","pr:2;ACTIVE",0,0
+2,"fix car today","pr:2;ACTIVE",0,0
 3,"buy idli","pr:3;DONE",0,0
-4,"Buy Umbrella","ACTIVE",0,0
-5,"See TV and relax","pr:1;ACTIVE",0,0
+4,"Buy Umbrella Yesterday and Tomorrow","ACTIVE",0,0
+5,"See TV and relax","pr:3;ACTIVE",0,0
 6,"Dummy5","pr:6",0,0
 1,"subtask1_1","ACTIVE; pr:2",1,0
-2,"subtask1_2","ACTIVE; pr:3",1,0
+2,"subtask1_2","ACTIVE; pr:1",1,0
 2,"subtask2_2","ACTIVE; pr:3",2,0
