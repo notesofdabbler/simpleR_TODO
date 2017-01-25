@@ -54,9 +54,9 @@ function(input, output){
         }
         
         if(l2_key == 0){
-          todolist[[i]] = p(style = stylestr, desc," ;", keywd, br(),actionLink(paste0("todolist_",l1_key,"_",l2_key),"Edit"))
+          todolist[[i]] = p(style = stylestr, desc," ;", keywd, br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditTask"),"  ",actionLink(paste0("addsub_",l1_key,"_",l2_key),"AddSubtask"))
         } else {
-          todolist[[i]] = p(style = paste0("margin-left: 40px; ",stylestr),desc, " ;", keywd, br(),actionLink(paste0("todolist_",l1_key,"_",l2_key),"Edit"))
+          todolist[[i]] = p(style = paste0("margin-left: 40px; ",stylestr),desc, " ;", keywd, br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditSubtask"))
         }
       }
       
@@ -80,7 +80,7 @@ function(input, output){
   observeEvent(todo_filt(),{
     
     todo_filt = todo_filt()$todo_filt
-    #print(todo_filt)
+    
     numtodo = nrow(todo_filt)
     todo_filt = todo_filt %>% arrange(l1_key, l2_key, l3_key)
     
@@ -90,7 +90,7 @@ function(input, output){
         local({
           my_i = i
 
-          observeEvent(input[[paste0("todolist_",pkey[my_i])]],{
+          observeEvent(input[[paste0("edit_",pkey[my_i])]],{
              rvs$currKey = pkey[my_i]
              output$addedit_task = renderUI({
                tagList(
@@ -100,12 +100,27 @@ function(input, output){
              })
              
            })
+          
+          if(todo_filt$l2_key[my_i] == 0){
+            observeEvent(input[[paste0("addsub_",pkey[my_i])]],{
+              currl1_key = todo_filt$l1_key[my_i]
+              currl2_key = max(todo_filt$l2_key[todo_filt$l1_key == currl1_key])+1
+              rvs$currKey = paste0(currl1_key,"_",currl2_key)
+              output$addedit_task = renderUI({
+                tagList(
+                  textInput("taskdesc","Enter Task"),
+                  textInput("taskkeywd","Enter Task Keywords")
+                )
+              })
+            })
+          }
+          
         })
      }
 
   })
   
-    
+  
    observeEvent(input$updatetask,{
      
       desc = input$taskdesc
@@ -121,11 +136,22 @@ function(input, output){
         tododf = rbind(tododf, todonew)
         
       } else {
+        
         currKey = rvs$currKey
+        l1_key = as.numeric(str_split(currKey,"_")[[1]][1])
+        l2_key = as.numeric(str_split(currKey,"_")[[1]][2])
+        l3_key = 0
+        
         pKey = paste0(tododf$l1_key,"_",tododf$l2_key)
         idx = which(pKey == currKey)
-        tododf$desc[idx] = desc
-        tododf$keywd[idx] = keywd
+        
+        if(length(idx) == 0){
+          todonew = data.frame(l1_key, l2_key, l3_key, desc = desc, keywd = keywd)
+          tododf = rbind(tododf, todonew)
+        } else {
+          tododf$desc[idx] = desc
+          tododf$keywd[idx] = keywd        
+        }
       }
 
       rvs$tododf = tododf
