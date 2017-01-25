@@ -120,23 +120,25 @@ function(input, output){
             observeEvent(input[[paste0("details_",pkey[my_i])]],{
               currl1_key = todo_filt$l1_key[my_i]
               currl2_key = todo_filt$l2_key[my_i]
-              currl3_key = max(todo_filt$l3_key[todo_filt$l1_key == currl1_key & todo_filt$l2_key == currl2_key]) + 1
-              rvs$currKey = paste0(currl1_key,"_",currl2_key,"_",currl3_key)
+              rvs$currKey = paste0(currl1_key,"_",currl2_key)
+              
               output$viewDetails = renderUI({
                 detailsdf = todo_filt %>% filter(l1_key == currl1_key, l2_key == currl2_key)
+                #print(detailsdf)
                 detailsList = tagList()
-                for(i in 1:nrow(detailsdf)){
-                  detailsList[[i]] = p(detailsdf$desc[my_i])
+                for(k in 1:nrow(detailsdf)){
+                  detailsList[[k]] = p(detailsdf$desc[k])
+                  #print(detailsList[[k]])
                 }
-                detailsList[[i+1]] = actionLink("addDetails","Add Details")
-                detailsList
+                detailsList[[k+1]] = actionLink("addDetails","Add Details")
+                return(detailsList)
               })
             })
             
             observeEvent("addDetails",{
               output$addDetailsUI = renderUI({
                 tagList(
-                  textInput("addDetails","Description"),
+                  textInput("addDetailsTxt","Description"),
                   actionButton("addDetailsdb","Add Details")
                 )
               })
@@ -189,14 +191,16 @@ function(input, output){
    
    observeEvent(input$addDetailsdb,{
      currKey = rvs$currKey
-     l1_key = as.numeric(str_split(currKey,"_")[[1]][1])
-     l2_key = as.numeric(str_split(currKey,"_")[[1]][2])
-     l3_key = as.numeric(str_split(currKey,"_")[[1]][3])
+     tododf = rvs$tododf
+     
+     currl1_key = as.numeric(str_split(currKey,"_")[[1]][1])
+     currl2_key = as.numeric(str_split(currKey,"_")[[1]][2])
+     currl3_key = max(tododf$l3_key[tododf$l1_key == currl1_key & tododf$l2_key == currl2_key])+1
 
-     desc = input$addDetails
+     desc = input$addDetailsTxt
      keywd = ""
 
-     todonew = data.frame(l1_key, l2_key, l3_key, desc = desc, keywd = keywd)
+     todonew = data.frame(l1_key = currl1_key, l2_key = currl2_key, l3_key = currl3_key, desc = desc, keywd = keywd)
      tododf = rbind(tododf, todonew)
 
      rvs$tododf = tododf
