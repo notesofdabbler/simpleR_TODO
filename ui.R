@@ -12,6 +12,12 @@ fluidPage(
               tabPanel("Add/Edit Task",
                  uiOutput("addedit_task"),
                  actionButton("updatetask","Update Task")
+                       ),
+              tabPanel("Details View",
+                 uiOutput("viewDetails")
+                       ),
+              tabPanel("Add Details",
+                 uiOutput("addDetailsUI")
                        )
   )
 )

@@ -40,6 +40,7 @@ function(input, output){
       for(i in 1:numtodo){
         l1_key = todo_filt$l1_key[i]
         l2_key = todo_filt$l2_key[i]
+        l3_key = todo_filt$l3_key[i]
         desc = todo_filt$desc[i]
         keywd = todo_filt$keywd[i]
         
@@ -55,8 +56,8 @@ function(input, output){
         
         if(l2_key == 0){
           todolist[[i]] = p(style = stylestr, desc," ;", keywd, br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditTask"),"  ",actionLink(paste0("addsub_",l1_key,"_",l2_key),"AddSubtask"))
-        } else {
-          todolist[[i]] = p(style = paste0("margin-left: 40px; ",stylestr),desc, " ;", keywd, br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditSubtask"))
+        } else if (l3_key == 0) {
+          todolist[[i]] = p(style = paste0("margin-left: 40px; ",stylestr),desc, " ;", keywd, br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditSubtask")," ",actionLink(paste0("details_",l1_key,"_",l2_key),"ViewDetails"))
         }
       }
       
@@ -115,6 +116,33 @@ function(input, output){
             })
           }
           
+          if(todo_filt$l2_key[my_i] > 0){
+            observeEvent(input[[paste0("details_",pkey[my_i])]],{
+              currl1_key = todo_filt$l1_key[my_i]
+              currl2_key = todo_filt$l2_key[my_i]
+              currl3_key = max(todo_filt$l3_key[todo_filt$l1_key == currl1_key & todo_filt$l2_key == currl2_key]) + 1
+              rvs$currKey = paste0(currl1_key,"_",currl2_key,"_",currl3_key)
+              output$viewDetails = renderUI({
+                detailsdf = todo_filt %>% filter(l1_key == currl1_key, l2_key == currl2_key)
+                detailsList = tagList()
+                for(i in 1:nrow(detailsdf)){
+                  detailsList[[i]] = p(detailsdf$desc[my_i])
+                }
+                detailsList[[i+1]] = actionLink("addDetails","Add Details")
+                detailsList
+              })
+            })
+            
+            observeEvent("addDetails",{
+              output$addDetailsUI = renderUI({
+                tagList(
+                  textInput("addDetails","Description"),
+                  actionButton("addDetailsdb","Add Details")
+                )
+              })
+            })
+          }
+          
         })
      }
 
@@ -158,6 +186,24 @@ function(input, output){
 
       write.csv(rvs$tododf,"db/todolist.csv",row.names = FALSE)
     })
+   
+   observeEvent(input$addDetailsdb,{
+     currKey = rvs$currKey
+     l1_key = as.numeric(str_split(currKey,"_")[[1]][1])
+     l2_key = as.numeric(str_split(currKey,"_")[[1]][2])
+     l3_key = as.numeric(str_split(currKey,"_")[[1]][3])
+
+     desc = input$addDetails
+     keywd = ""
+
+     todonew = data.frame(l1_key, l2_key, l3_key, desc = desc, keywd = keywd)
+     tododf = rbind(tododf, todonew)
+
+     rvs$tododf = tododf
+
+     write.csv(rvs$tododf,"db/todolist.csv",row.names = FALSE)
+
+   })
     
     
 
