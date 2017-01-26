@@ -7,12 +7,14 @@ tododf = read.csv("db/todolist.csv", stringsAsFactors = FALSE)
 
 function(input, output){
   
-  rvs = reactiveValues(tododf = tododf, currKey = NULL)
+  rvs = reactiveValues(tododf = tododf, todo_filt = NULL, currKey = NULL)
   
-  todo_filt = reactive({
+
+  todo_filt = eventReactive(input$gettodo,{
     todo_filt = rvs$tododf
     todo_filt$desckeywd = paste0(todo_filt$desc,";;",todo_filt$keywd)
-    if(input$filtCrit != ""){
+    filtCrit = isolate(input$filtCrit)
+    if(filtCrit != ""){
       rowidx = grepl(input$filtCrit, todo_filt$desckeywd)
       todo_filt = todo_filt[rowidx,]
     }
@@ -28,7 +30,6 @@ function(input, output){
     return(list(todo_filt = todo_filt))
   })
   
-#  observeEvent(input$gettodo,{
     output$todolist = renderUI({
       
       todo_filt = todo_filt()$todo_filt
@@ -54,9 +55,11 @@ function(input, output){
           stylestr = ""
         }
         
+        showLvl = isolate(input$showLvl)
+        
         if(l2_key == 0){
           todolist[[i]] = p(style = stylestr, desc," ; [", keywd,"]", br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditTask"),"  ",actionLink(paste0("addsub_",l1_key,"_",l2_key),"AddSubtask"))
-        } else if (l3_key == 0 & input$showLvl == "1 and 2") {
+        } else if (l3_key == 0 & showLvl == "1 and 2") {
           todolist[[i]] = p(style = paste0("margin-left: 40px; ",stylestr),desc, " ; [", keywd,"]", br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditSubtask")," ",actionLink(paste0("details_",l1_key,"_",l2_key),"ViewDetails"))
         }
       }
@@ -64,7 +67,7 @@ function(input, output){
       return(todolist)
   })
 
-#  })
+
   
   observeEvent(input$addnewtask,{
     rvs$currKey = NULL
