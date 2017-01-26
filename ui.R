@@ -1,17 +1,31 @@
 library(shiny)
+library(shinythemes)
 
-fluidPage(
+fluidPage(theme = shinytheme("cerulean"),
   titlePanel("SimpleR TODO App"),
-  actionButton("addnewtask","Add New Task"),
-  textInput("filtCrit","Filter Criteria"),
-  actionButton("gettodo","Get Todo"),
+  fluidRow(
+    column(4,
+           textInput("filtCrit","Filter Criteria") 
+           ),
+    column(4,
+           selectInput("showLvl","Show Levels",choices = c("1","1 and 2"))      
+           )
+      ),
   tabsetPanel(type = "tabs",
               tabPanel("TODOlist",
                  uiOutput("todolist")
                        ),
               tabPanel("Add/Edit Task",
-                 uiOutput("addedit_task"),
-                 actionButton("updatetask","Update Task")
+                 br(),
+                 fluidRow(
+                   column(2,
+                          actionButton("addnewtask","Add New Task")
+                   ),
+                   column(2,
+                          actionButton("updatetask","Update Task")
+                   )                 
+                 ),
+                 uiOutput("addedit_task")
                        ),
               tabPanel("Details View",
                  uiOutput("viewDetails")

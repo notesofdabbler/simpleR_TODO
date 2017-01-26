@@ -55,9 +55,9 @@ function(input, output){
         }
         
         if(l2_key == 0){
-          todolist[[i]] = p(style = stylestr, desc," ;", keywd, br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditTask"),"  ",actionLink(paste0("addsub_",l1_key,"_",l2_key),"AddSubtask"))
-        } else if (l3_key == 0) {
-          todolist[[i]] = p(style = paste0("margin-left: 40px; ",stylestr),desc, " ;", keywd, br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditSubtask")," ",actionLink(paste0("details_",l1_key,"_",l2_key),"ViewDetails"))
+          todolist[[i]] = p(style = stylestr, desc," ; [", keywd,"]", br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditTask"),"  ",actionLink(paste0("addsub_",l1_key,"_",l2_key),"AddSubtask"))
+        } else if (l3_key == 0 & input$showLvl == "1 and 2") {
+          todolist[[i]] = p(style = paste0("margin-left: 40px; ",stylestr),desc, " ; [", keywd,"]", br(),actionLink(paste0("edit_",l1_key,"_",l2_key),"EditSubtask")," ",actionLink(paste0("details_",l1_key,"_",l2_key),"ViewDetails"))
         }
       }
       
@@ -70,7 +70,7 @@ function(input, output){
     rvs$currKey = NULL
     output$addedit_task = renderUI({
       tagList(
-        textInput("taskdesc","Enter Task"),
+        textAreaInput("taskdesc","Enter Task",height = '100px',width = '500px'),
         textInput("taskkeywd","Enter Task Keywords")
       )
     })
@@ -95,7 +95,7 @@ function(input, output){
              rvs$currKey = pkey[my_i]
              output$addedit_task = renderUI({
                tagList(
-                 textInput("taskdesc","Enter Task",value = todo_filt$desc[my_i]),
+                 textAreaInput("taskdesc","Enter Task",value = todo_filt$desc[my_i],height = '100px',width = '500px'),
                  textInput("taskkeywd","Enter Task Keywords",value = todo_filt$keywd[my_i])
                )
              })
@@ -109,7 +109,7 @@ function(input, output){
               rvs$currKey = paste0(currl1_key,"_",currl2_key)
               output$addedit_task = renderUI({
                 tagList(
-                  textInput("taskdesc","Enter Task"),
+                  textAreaInput("taskdesc","Enter Task",height = '100px', width = '500px'),
                   textInput("taskkeywd","Enter Task Keywords")
                 )
               })
@@ -138,7 +138,7 @@ function(input, output){
             observeEvent("addDetails",{
               output$addDetailsUI = renderUI({
                 tagList(
-                  textInput("addDetailsTxt","Description"),
+                  textAreaInput("addDetailsTxt","Description",height = '100px',width = '500px'),
                   actionButton("addDetailsdb","Add Details")
                 )
               })
